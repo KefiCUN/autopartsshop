@@ -188,6 +188,21 @@ const getStockBadge = (status, quantity) => {
             }}
             >
               <Card.Body style={{ padding: 22 }}>
+                {part.imageUrl && (
+                  <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                    <img 
+                      src={`http://localhost:5051${part.imageUrl}`} 
+                      alt={part.name}
+                      style={{ 
+                        maxWidth: '100%', 
+                        maxHeight: 120, 
+                        objectFit: 'contain',
+                        borderRadius: 8
+                      }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
                 <Card.Title style={{ 
                   fontWeight: 700, 
                   color: '#1a1a1a',

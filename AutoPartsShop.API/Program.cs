@@ -51,6 +51,8 @@ app.UseSwaggerUI();
 
 app.MapGet("/", () => "API работает! Перейдите на <a href='/swagger'>/swagger</a>");
 
+
+app.UseStaticFiles();
 app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseAuthorization();

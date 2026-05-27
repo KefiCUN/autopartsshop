@@ -18,7 +18,7 @@ function OrdersList() {
 
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const canManage = user.role === 'Admin' || user.role === 'Manager';
+  const canManage = user.role === true;
 
   useEffect(() => { loadOrders(); }, []);
 
@@ -256,12 +256,10 @@ function OrdersList() {
                     <td style={{ padding: '14px 18px', fontWeight: 700, textAlign: 'right' }}>{order.totalAmount.toFixed(2)} ₽</td>
                     <td style={{ padding: '14px 18px', textAlign: 'center', color: '#888' }}>{order.itemsCount}</td>
                     <td style={{ padding: '14px 18px' }}>
-                      {canManage ? (
                         <span style={{ cursor: 'pointer', borderBottom: '1px dashed #8B0000' }}
                           onClick={() => { setSelectedOrder(order.id); setNewStatus(order.status); setShowStatus(true); }}>
                           {getStatusBadge(order.status)}
                         </span>
-                      ) : getStatusBadge(order.status)}
                     </td>
                     <td style={{ padding: '14px 18px', textAlign: 'center' }}>
                       <Button variant="link" size="sm" onClick={() => printOrder(order.id)}

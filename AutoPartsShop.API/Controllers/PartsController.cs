@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using AutoPartsShop.API.Data;
+using AutoPartsShop.API.Models;
 using AutoPartsShop.API.Services;
+using System.IO;
 
 namespace AutoPartsShop.API.Controllers
 {
@@ -34,9 +36,9 @@ namespace AutoPartsShop.API.Controllers
                 p.ArticleNumber,
                 p.Name,
                 p.Brand,
+                p.ImageUrl,
                 p.RetailPrice,
                 p.StockQuantity,
-                p.ImageUrl,
                 StockStatus = p.StockQuantity == 0 ? "OutOfStock" :
                               p.StockQuantity <= p.MinStockQuantity ? "LowStock" : "InStock"
             });
@@ -59,6 +61,7 @@ namespace AutoPartsShop.API.Controllers
                 a.ArticleNumber,
                 a.Name,
                 a.Brand,
+                a.ImageUrl,
                 a.RetailPrice,
                 a.StockQuantity,
                 SavingsPercent = originalPart.RetailPrice > 0 
@@ -84,6 +87,7 @@ namespace AutoPartsShop.API.Controllers
                     p.ArticleNumber,
                     p.Name,
                     p.Brand,
+                    p.ImageUrl,
                     p.RetailPrice,
                     p.StockQuantity,
                     StockStatus = p.StockQuantity == 0 ? "OutOfStock" :
@@ -106,6 +110,7 @@ namespace AutoPartsShop.API.Controllers
                     p.ArticleNumber,
                     p.Name,
                     p.Brand,
+                    p.ImageUrl,
                     p.StockQuantity,
                     p.MinStockQuantity
                 })
@@ -145,7 +150,86 @@ namespace AutoPartsShop.API.Controllers
             
             return Ok(new { message = "Цена обновлена", retailPrice = part.RetailPrice });
         }
-    }
+
+        // Создать запчасть — только Admin
+        [HttpPost("create")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create([FromForm] CreatePartModel model, IFormFile? image)
+        {
+            if (string.IsNullOrWhiteSpace(model.ArticleNumber) || string.IsNullOrWhiteSpace(model.Name))
+                return BadRequest(new { message = "Артикул и наименование обязательны" });
+
+            string? imageUrl = model.ImageUrl;
+
+            if (image != null && image.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(stream);
+                }
+
+                imageUrl = $"/uploads/{uniqueFileName}";
+            }
+
+            var part = new Part
+            {
+                ArticleNumber = model.ArticleNumber,
+                Name = model.Name,
+                Brand = model.Brand,
+                ImageUrl = imageUrl,
+                RetailPrice = model.RetailPrice,
+                StockQuantity = model.StockQuantity,
+                MinStockQuantity = model.MinStockQuantity,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
+            };
+
+            _context.Parts.Add(part);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Запчасть создана", part });
+        }
+
+        // Удалить запчасть — только Admin
+        // Удалить запчасть — только Admin
+[HttpDelete("{id}")]
+[Authorize(Roles = "Admin")]
+public async Task<IActionResult> Delete(int id)
+{
+    var part = await _context.Parts
+        .Include(p => p.Analogues)
+        .Include(p => p.Compatibilities)
+        .FirstOrDefaultAsync(p => p.Id == id);
+    
+    if (part == null)
+        return NotFound(new { message = "Запчасть не найдена" });
+
+    // Удаляем связанные позиции в заказах (через SQL, так как нет прямой связи в модели)
+    var orderItems = await _context.OrderItems.Where(oi => oi.PartId == id).ToListAsync();
+    _context.OrderItems.RemoveRange(orderItems);
+    
+    // Сначала сохраняем удаление позиций
+    await _context.SaveChangesAsync();
+
+    // Удаляем аналоги
+    _context.PartAnalogues.RemoveRange(part.Analogues);
+
+    // Удаляем совместимости
+    _context.PartCompatibilities.RemoveRange(part.Compatibilities);
+
+    // Удаляем запчасть
+    _context.Parts.Remove(part);
+    await _context.SaveChangesAsync();
+
+    return Ok(new { message = "Запчасть удалена" });
+}}
     
     public class UpdateStockModel
     {
@@ -155,5 +239,16 @@ namespace AutoPartsShop.API.Controllers
     public class UpdatePriceModel
     {
         public decimal RetailPrice { get; set; }
+    }
+
+    public class CreatePartModel
+    {
+        public string ArticleNumber { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Brand { get; set; }
+        public string? ImageUrl { get; set; }
+        public decimal RetailPrice { get; set; }
+        public int StockQuantity { get; set; }
+        public int MinStockQuantity { get; set; } = 3;
     }
 }

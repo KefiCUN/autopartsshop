@@ -115,3 +115,5 @@ C:\Users\Kef\Desktop\project\с#\AutoPartsShop\AutoPartsShop.API\obj\Debug\net10
 C:\Users\Kef\Desktop\project\с#\AutoPartsShop\AutoPartsShop.API\obj\Debug\net10.0\AutoPartsShop.API.pdb
 C:\Users\Kef\Desktop\project\с#\AutoPartsShop\AutoPartsShop.API\obj\Debug\net10.0\AutoPartsShop.API.genruntimeconfig.cache
 C:\Users\Kef\Desktop\project\с#\AutoPartsShop\AutoPartsShop.API\obj\Debug\net10.0\ref\AutoPartsShop.API.dll
+C:\Users\Kef\Desktop\project\с#\AutoPartsShop\AutoPartsShop.API\obj\Debug\net10.0\AutoPartsShop.API.sourcelink.json
+C:\Users\Kef\Desktop\project\с#\AutoPartsShop\AutoPartsShop.API\bin\Debug\net10.0\AutoPartsShop.API.staticwebassets.runtime.json

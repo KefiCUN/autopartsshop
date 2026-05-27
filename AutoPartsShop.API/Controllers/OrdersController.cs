@@ -154,7 +154,6 @@ namespace AutoPartsShop.API.Controllers
         
         // Обновить статус заказа — только Admin и Manager
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Admin,Manager")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateStatusModel model)
         {
             var order = await _context.Orders.FindAsync(id);
